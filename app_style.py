@@ -12,7 +12,7 @@ import json
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.shared import Pt
 
-st.set_page_config(page_title="Kidventure Studios", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="Kids Screenplay Generator", page_icon="🎬", layout="wide")
 
 # Load environment variables
 # load_dotenv()
@@ -27,71 +27,40 @@ anthropic_client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
 # Function to generate screenplay using Anthropic Claude 3.5 (Messages API)
 def generate_screenplay(data):
-    user_prompt = f"""Generate a short 3-4 minute screenplay for a children's short film in a style like Disney would, based on the following input details in <input> tags. 
-    The output screenplay must be formatted as a JSON.
-
-    Here are the screenplay input details:
+    user_prompt = f"""Generate a short 3-4 minute screenplay for a children's short firlm based on the following details. The output screenplay must be formatted as a JSON.
     <input>
     Here are the details
-    Theme: {data['theme']},
-    Story Summary: {data['story_summary']},
-    Number of Characters: {data['number_of_characters']},
-    Characters: {data['characters']},
-    Suggested Props: Yes,
-    Custom Props: {data['props']},
-    VFX: {'Yes' if data['vfx'] else 'No'},
-    Drones: {'Yes' if data['drones'] else 'No'},
+    Theme: {data['theme']}
+    Story Summary: {data['story_summary']}
+    Characters: {data['characters']}
+    Props: {data['props']}
+    VFX: {'Yes' if data['vfx'] else 'No'}
+    Drones: {'Yes' if data['drones'] else 'No'}
     Location: {data['location']}
     </input>
 
     <guidelines>
-    The JSON output must be in the following JSON format. It should be 6 scenes (for scene_number), and 2 to 3 shots (for shot_number) per scene. Some scenes should have 3 shots. 
-    The screenplay should contain a focus on overcoming obstacles (problem and resolution)and learning a valuable lesson. It should be fun and engaging.
-    If suitable, add an "Ah-hah!" moment (unexpected situations for each story that instills excitement). Also, try to get the characters moving at times - running, jumping, hopping, crawling, inspecting, etc from one scene to the next.
-    Keep speaking lines simple (there should be back-and-forth interaction between characters in most of the shots).
-    The screenplay will be filmed at their house (bedrooms, family room, hallways, kitchen, garage, outside of house, porch, yard), and it will be filmed in the daytime, so do not use elaborate scene set up.
-
-    When adding suggested_props_wardrobe, make sure props and wardrobe are 'common household items' or 'common toys' that kids have.
-    If Custom Props are provided, then also include them in the screenplay, along with the sugested_props_wardrobe.
-    Make sure you only include suggested_props_wardrobe or any custom props (if provided) in the screenplay
-    
-    If VFX is Yes, then consider adding up to 3 simple and low budget VFX shots to the screenplay. You can decide to add VFX shots in any scene by describing them in the scene_breakdown and shot_description.
-    Your only VFX options are:
-    1. Objects or motion shoot out of another object
-    2. An object or objects fly into/out of the scene
-    3. Objects appear or disappear suddenly
-    4. Overlay of snow, rain, smoke, flashes of lightning, fire
-    5. Objects highlight or glow with added effects
-    6. Spots or portals opening on walls and surroundings
-    7. Trails of sparkles follow a character or object
-    8. Objects or characters change colors instantly or gradually
-    9. Objects inflate and pop like balloons
-    10. Magical dust flows and transforms objects
-    11. Beams of light or lasers shooting from objects or characters
-    12. Objects defy gravity and float or hover in the air
-
-    Here is the JSON format you must use to generate the screenplay:
+    The JSON output must be in the following JSON format. You can use up to 5 scenes (for scene_number), and up to 3 shots (for shot_number) per scene. Make the spoke_lines short and concise.
     {{
         "title": "Title of the screenplay",
-        "synopsis": "An exciting 4 to 5 sentence synopsis of the screenplay highlighting the adventure, theme, challenges, and characters. Use some exciting plot details but don't give away the ending.",
-        "number_of_characters": "{data['number_of_characters']}",
-        "characters": "Characters in the screenplay, their names (if provided), and character breakdown (what they are like, what their role is, etc.). This should makes the kids excited to play the characters.",
-        "suggested_props_wardrobe": "Common household items or common toys that kids have that can be used in the screenplay",
-        "custom_props": "{data['props']}",
+        "synopsis": "3 to 4 sentence synopsis of the screenplay",
+        "characters": "Characters in the screenplay, their names (if provided), and roles description",
         "scenes": [
             {{
-                "scene_number": "Scene number (1 to 6)",
-                "scene_breakdown": "Breakdown of the scene, including location, scene set up, characters, props, what's happening (flow), and VFX shots if any",
-                "scene_props": "Props needed for this scene. Make sure to only select from the suggested_props_wardrobe or custom_props (if provided).",
+                "scene_number": "Scene number (1 to 5)",
+                "scene_breakdown": "Breakdown of the scene, including location, characters, props, and what's happening",
+                "scene_props": "Props needed for this scene",
                 "shots": [
                     {{
                         "shot_number": "Shot number (1 to 3)",
-                        "shot_description": "Description of the shot, including camera movement, shot types, character tips, and VFX shots if any",
-                        "spoken_lines": ["A list of spoken lines for characters in the shot. Only use the characters provided."],
+                        "shot_description": "Description of the shot, including camera movement and character tips",
+                        "spoken_lines": "Spoken lines for the shot"
                     }}
                 ]
             }}
         ],
+        "included_props": "suggested props and wardrobe used in the screenplay" ,
+        "suggested_props": "suggested props and wardrobe that can be used in the screenplay but we are not using it in the screenplay"
     }}
 
     An example of a title is: 
@@ -105,12 +74,12 @@ def generate_screenplay(data):
     An example of a scene_props is:
         Sword, Dress, Round Table
     An example of a shot_description is: 
-        Wide shot to establish the imaginative setting. VFX Option: sword glimmers with a sparkly effect.
-    An example of spoken lines for 4 characters is: 
-        Character Name 1: (placing his sword over the table with dramatic flair) "Knights of the Round Table, our quest begins! We face great challenges today!"
-        Character Name 2: (pumping his fist) "We shall retrieve our lost crown!"
-        Character Name 3: (jumping slightly, excited) "And rescue the mythical creature from dire perils!"
-        Character Name 4: (raising sword) " No dragon shall breach our castle walls!"
+        Wide shot to establish the imaginative setting
+    An example of spoken lines is: 
+        Character 1: (placing his sword over the table with dramatic flair) "Knights of the Round Table, our quest begins! We face great challenges today!"
+        Character 2: (pumping his fist) "We shall retrieve our lost crown!"
+        Character 3: (jumping slightly, excited) "And rescue the mythical creature from dire perils!"
+        Character 4: (raising sword) " No dragon shall breach our castle walls!"
 
     Double check the JSON format to make sure the keys and formatting are correct. Use double quotes for all string values. Use single quotes for spoken_lines.This is very important.
     </guidelines>
@@ -128,7 +97,7 @@ def generate_screenplay(data):
     ]
 
     response = anthropic_client.messages.create(
-        model="claude-3-5-sonnet-latest",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=8192,
         messages=message_list
     )
@@ -187,20 +156,17 @@ def create_docx(screenplay_json, image):
     footer_para = footer.paragraphs[0]
     footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
     footer_run = footer_para.add_run()
-    footer_run.add_picture('logo.png', width=Inches(1))  # Adjust path and size as needed
+    #footer_run.add_picture('logo.png', width=Inches(1))  # Adjust path and size as needed
 
     # Adjust spacing to move logo to bottom
-    footer_para.paragraph_format.space_before = Pt(0)
-    footer_para.paragraph_format.space_after = Pt(0)
+    #footer_para.paragraph_format.space_before = Pt(0)
+    #footer_para.paragraph_format.space_after = Pt(0)
 
     # Add title
     title = screenplay_json["title"]
     doc.add_heading(title, 0)
     # Add the image to the document
-    if image:
-        doc.add_picture(image, width=Inches(6.0))
-    else:
-        doc.add_paragraph("(No cover image generated)")
+    doc.add_picture(image, width=Inches(6.0))
 
     doc.add_page_break()
 
@@ -238,40 +204,37 @@ def create_docx(screenplay_json, image):
 
     # Third page: Synopsis and Characters
     doc.add_heading("Your Story", level=1)
-    doc.add_heading("Plot Summary", level=1)
+    doc.add_heading("Synopsis", level=1)
     doc.add_paragraph(screenplay_json["synopsis"])
     doc.add_heading("Characters", level=1)
     doc.add_paragraph(screenplay_json["characters"])
-    # # Suggested Props and Wardrobe
-    doc.add_heading("Suggested Props and Wardrobe", level=1)
+    doc.add_heading("Props", level=1)
+    #doc.add_paragraph(screenplay_json["suggested_props"])
     # Extracting included and suggested props from the screenplay_json
-    suggested_props_list = screenplay_json["suggested_props_wardrobe"].split(',')
-    custom_props_list = screenplay_json["custom_props"].split(',')
+    included_props_list = screenplay_json["included_props"].split(',')
+    suggested_props_list = screenplay_json["suggested_props"].split(',')
     # Create a table with 0 initial rows (since we'll be dynamically adding rows)
     table = doc.add_table(rows=0, cols=2)
     table.style = 'Table Grid'
 
     # Add "Included" props if there are any
-    if suggested_props_list:
-        for prop in suggested_props_list:
+    if included_props_list:
+        for prop in included_props_list:
             row_cells = table.add_row().cells
             row_cells[1].text = prop.strip()  # Add prop name in the second column
         # Merge the first column cells for "Included" props
-        suggested_cell = table.cell(0, 0).merge(table.cell(len(suggested_props_list) - 1, 0))
-        suggested_cell.text = "Suggested"  # Set the merged cell text for Included
+        included_cell = table.cell(0, 0).merge(table.cell(len(included_props_list) - 1, 0))
+        included_cell.text = "Included"  # Set the merged cell text for Included
 
     # Add "Suggested" props if there are any
-    if len(custom_props_list) > 0:
-        print('hit')
-        print(custom_props_list)
-        start_row = len(suggested_props_list)  # Start from after suggested props
-        end_row = start_row + len(custom_props_list) - 1
-        for prop in custom_props_list:
+    if suggested_props_list:
+        start_row = len(included_props_list)  # Starting point for Suggested props
+        for prop in suggested_props_list:
             row_cells = table.add_row().cells
             row_cells[1].text = prop.strip()  # Add prop name in the second column
         # Merge the first column cells for "Suggested" props
-        provided_cell = table.cell(start_row, 0).merge(table.cell(end_row, 0))
-        provided_cell.text = "Provided"  # Set the merged cell text for Suggested
+        suggested_cell = table.cell(start_row, 0).merge(table.cell(len(table.rows) - 1, 0))
+        suggested_cell.text = "Suggested"  # Set the merged cell text for Suggested
 
 
     doc.add_page_break()
@@ -299,32 +262,21 @@ def create_docx(screenplay_json, image):
             shot_description = doc.add_paragraph(shot["shot_description"])
             shot_description.paragraph_format.left_indent = Inches(0.5)  # Indent by 0.5 inches
             # Add spoken lines and indent them
-            # spoken_lines = doc.add_paragraph(shot["spoken_lines"], style='Quote')
-            # spoken_lines.paragraph_format.left_indent = Inches(0.5)  # Indent by 0.5 inches
-            # Create a paragraph for spoken lines with indentation
-            spoken_para = doc.add_paragraph(style='Quote')
-            spoken_para.paragraph_format.left_indent = Inches(0.5)
-            # Add each line from the list on a new line
-            for line in shot["spoken_lines"]:
-                spoken_para.add_run(line + '\n')
-    
-    doc.add_page_break()
-    doc.add_heading("Reminder - Poster Time!", level=1)
-    doc.add_paragraph(
-        "Don't forget to snap a few photos of your actors for your custom poster. "
-        "Please follow these guidelines and upload to the website along with the clips:"
-    )
-    guidelines = [
-        "Use smartphone or similar device",
-        "Have kids stand against a blank wall, white is best, or other light color",
-        "Use as much light as possible, natural light is best",
-        "Full body shots head-to-toe",
-        "In their costumes or wardrobe",
-        "Get 2-3 shots"
-    ]
-    
-    for guideline in guidelines:
-        doc.add_paragraph(guideline, style='List Bullet')
+            spoken_lines = doc.add_paragraph(shot["spoken_lines"], style='Quote')
+            spoken_lines.paragraph_format.left_indent = Inches(0.5)  # Indent by 0.5 inches
+
+    # # Additional sections
+    # doc.add_heading("Suggested Props", level=1)
+    # doc.add_paragraph(screenplay_json["suggested_props"])
+
+    # doc.add_heading("How to Use", level=1)
+    # doc.add_paragraph(screenplay_json["how_to_use"])
+
+    # doc.add_heading("Filming Tips", level=1)
+    # doc.add_paragraph(screenplay_json["filming_tips"])
+
+    # doc.add_heading("Trendy Shots", level=1)
+    # doc.add_paragraph(screenplay_json["trendy_shots"])
 
     # Save the document to a BytesIO object to make it downloadable
     doc_io = BytesIO()
@@ -364,9 +316,8 @@ with col1:
         theme = selected_theme
 
     story_summary = st.text_area("Story Summary", placeholder="A brief summary of the story")
-    number_of_characters = st.selectbox("Number of Characters", options=range(1, 6))
-    characters = st.text_area("Characters", placeholder="List of characters and age (e.g. John - Hero (Age 12), Anna - Friend (Age 10))")
-    props = st.text_area("Props and Wardrobe", placeholder="Provided props and wardrobe separated by commas")
+    characters = st.text_area("Characters", placeholder="List of characters (e.g. John - Hero, Anna - Friend)")
+    props = st.text_area("Props and Wardrobe", placeholder="Describe props and wardrobe")
 
     vfx = st.checkbox("Include VFX shots")
     drones = st.checkbox("Include Drone shots")
@@ -385,7 +336,6 @@ with col1:
             data = {
                 "theme": theme,
                 "story_summary": story_summary,
-                "number_of_characters": number_of_characters,
                 "characters": characters,
                 "props": props,
                 "vfx": vfx,
@@ -413,7 +363,7 @@ with col1:
                     f"Title: {title}"
                     f"Synopsis: {story_summary}"
                     f"Characters: {characters}"
-                    f"highlighting the theme of the screenplay. NEVER PUT TEXT ON THE MOVIE POSTER. I will put my own text on the poster."
+                    f"highlighting the theme of the screenplay. NEVER PUT TEXT ON THE MOVIE POSTER."
                 )
                 st.session_state.image_prompt = image_prompt
                 image_path = generate_image(image_prompt)
@@ -469,7 +419,7 @@ with col2:
                     for path in st.session_state.images:
                         st.image(path, caption=f"Regenerated Cover Image {st.session_state.regeneration_count}", use_column_width=True)
     
-    if st.session_state.screenplay:  
+    if st.session_state.screenplay and st.session_state.image:  
         # Create a .docx file from the screenplay text
         docx_file = create_docx(st.session_state.screenplay,st.session_state.image)
 
